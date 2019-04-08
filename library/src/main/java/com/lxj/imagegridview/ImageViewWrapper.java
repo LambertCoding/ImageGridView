@@ -1,17 +1,17 @@
 package com.lxj.imagegridview;
 
 import android.content.Context;
-import android.graphics.*;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
-import android.view.ViewGroup;
-import android.view.ViewParent;
 
 public class ImageViewWrapper extends android.support.v7.widget.AppCompatImageView {
 
@@ -24,6 +24,7 @@ public class ImageViewWrapper extends android.support.v7.widget.AppCompatImageVi
     private String msg = "";                  //要绘制的文字
     public boolean isAdaptSelf = false;
     public int maxHeight;
+
     public ImageViewWrapper(Context context) {
         this(context, null);
     }
@@ -58,14 +59,14 @@ public class ImageViewWrapper extends android.support.v7.widget.AppCompatImageVi
     @Override
     public void setImageDrawable(@Nullable Drawable drawable) {
         super.setImageDrawable(drawable);
-        if(drawable!=null && isAdaptSelf){
-            float ratio = drawable.getIntrinsicWidth()*1f / drawable.getIntrinsicHeight();
-            ViewGroup parent = (ViewGroup) getParent();
-            ViewGroup.LayoutParams params = parent.getLayoutParams();
-            params.height = Math.min(drawable.getIntrinsicHeight(), maxHeight);
-            params.width = (int) (params.height*ratio);
-            parent.setLayoutParams(params);
-        }
+//        if (drawable != null && isAdaptSelf) {
+//            float ratio = drawable.getIntrinsicWidth() * 1f / drawable.getIntrinsicHeight();
+//            ViewGroup parent = (ViewGroup) getParent();
+//            ViewGroup.LayoutParams params = parent.getLayoutParams();
+//            params.height = Math.min(drawable.getIntrinsicHeight(), maxHeight);
+//            params.width = (int) (params.height * ratio);
+//            parent.setLayoutParams(params);
+//        }
     }
 
     @Override

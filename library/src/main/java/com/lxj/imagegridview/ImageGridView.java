@@ -5,12 +5,11 @@ import android.content.res.TypedArray;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,11 +17,11 @@ public class ImageGridView extends ViewGroup {
 
     public static final int MODE_FILL = 0;          //填充模式，类似于微信
     public static final int MODE_GRID = 1;          //网格模式，类似于QQ，4张图会 2X2布局
-    private int singleImageSize = 180;              // 单张图片时的最大大小,单位dp
+    private int singleImageSize = 220;              // 单张图片时的最大大小,单位dp
     private float singleImageRatio = 1.0f;          // 单张图片的宽高比(宽/高)
     private int maxImageSize = 9;                   // 最大显示的图片数
     private int gridSpacing = 3;                    // 宫格间距，单位dp
-    private int mode = MODE_FILL;                   // 默认使用fill模式
+    private int mode = MODE_GRID;                   // 默认使用fill模式
 
     private int columnCount;    // 列数
     private int rowCount;       // 行数
@@ -30,8 +29,8 @@ public class ImageGridView extends ViewGroup {
     private int gridHeight;     // 宫格高度
 
     private List<ImageView> imageViews;
-    private List<String> mImageInfo;
-    private ImageGridAdapter mAdapter;
+    private List mImageInfo;
+    private ImageGridAdapter<Object> mAdapter;
 
     public ImageGridView(Context context) {
         this(context, null);
@@ -64,13 +63,13 @@ public class ImageGridView extends ViewGroup {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         measureChildren(widthMeasureSpec, heightMeasureSpec);
         int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = 0;
+        int height;
         int totalWidth = width - getPaddingLeft() - getPaddingRight();
         if (mImageInfo != null && mImageInfo.size() > 0) {
             if (mImageInfo.size() == 1) {
                 ImageViewWrapper view = (ImageViewWrapper) getChildAt(0);
-                view.maxHeight = singleImageSize;
-                view.isAdaptSelf = true;
+//                view.maxHeight = singleImageSize;
+//                view.isAdaptSelf = true;
                 gridWidth = Math.min(view.getMeasuredWidth(), singleImageSize);
                 gridHeight = Math.min(view.getMeasuredHeight(), singleImageSize);
             } else {
@@ -106,19 +105,19 @@ public class ImageGridView extends ViewGroup {
      */
     public void setAdapter(@NonNull ImageGridAdapter adapter) {
         mAdapter = adapter;
-        List<String> urls = adapter.getUrls();
+        List imageDataSet = adapter.getImageDataSet();
 
-        if (urls == null || urls.isEmpty()) {
+        if (imageDataSet == null || imageDataSet.isEmpty()) {
             setVisibility(GONE);
             return;
         } else {
             setVisibility(VISIBLE);
         }
 
-        int imageCount = urls.size();
+        int imageCount = imageDataSet.size();
         if (maxImageSize > 0 && imageCount > maxImageSize) {
-            urls = urls.subList(0, maxImageSize);
-            imageCount = urls.size();   //再次获取图片数量
+            imageDataSet = imageDataSet.subList(0, maxImageSize);
+            imageCount = imageDataSet.size();   //再次获取图片数量
         }
 
         //默认是3列显示，行数根据图片的数量决定
@@ -141,11 +140,10 @@ public class ImageGridView extends ViewGroup {
             }
         } else {
             int oldViewCount = mImageInfo.size();
-            int newViewCount = imageCount;
-            if (oldViewCount > newViewCount) {
-                removeViews(newViewCount, oldViewCount - newViewCount);
-            } else if (oldViewCount < newViewCount) {
-                for (int i = oldViewCount; i < newViewCount; i++) {
+            if (oldViewCount > imageCount) {
+                removeViews(imageCount, oldViewCount - imageCount);
+            } else if (oldViewCount < imageCount) {
+                for (int i = oldViewCount; i < imageCount; i++) {
                     ImageView iv = getImageView(i);
                     if (iv == null) return;
                     addView(iv, generateDefaultLayoutParams());
@@ -153,14 +151,14 @@ public class ImageGridView extends ViewGroup {
             }
         }
         //修改最后一个条目，决定是否显示更多
-        if (adapter.getUrls().size() > maxImageSize) {
+        if (adapter.getImageDataSet().size() > maxImageSize) {
             View child = getChildAt(maxImageSize - 1);
             if (child instanceof ImageViewWrapper) {
                 ImageViewWrapper imageView = (ImageViewWrapper) child;
-                imageView.setMoreNum(adapter.getUrls().size() - maxImageSize);
+                imageView.setMoreNum(adapter.getImageDataSet().size() - maxImageSize);
             }
         }
-        mImageInfo = urls;
+        mImageInfo = imageDataSet;
     }
 
     /**
@@ -175,12 +173,12 @@ public class ImageGridView extends ViewGroup {
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mAdapter.onImageItemClick(getContext(), ImageGridView.this, position, mAdapter.getUrls());
+                    mAdapter.onImageItemClick(getContext(), ImageGridView.this, position);
                 }
             });
             imageViews.add(imageView);
         }
-        mAdapter.loadImage(imageView, position, mAdapter.getUrls().get(position));
+        mAdapter.loadImage(imageView, position, mAdapter.getImageItem(position));
         return imageView;
     }
 
@@ -215,6 +213,5 @@ public class ImageGridView extends ViewGroup {
     public int getMaxSize() {
         return maxImageSize;
     }
-
 
 }
